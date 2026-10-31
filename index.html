@@ -1,0 +1,1831 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Infofy - Plataforma de Vendas e Infoprodutos</title>
+  <meta name="description" content="Protótipo completo de plataforma de vendas e hospedagem de infoprodutos com dashboard, marketplace, gestão de produtos e checkout de alta conversão estilo Kiwify e Hotmart." />
+  <meta property="og:title" content="Infofy - Plataforma de Vendas e Infoprodutos" />
+  <meta property="og:description" content="Dashboard de métricas, marketplace de infoprodutos e checkout de alta conversão." />
+  <meta property="og:type" content="website" />
+
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+              dark: '#022c22',
+            },
+            surface: {
+              canvas: '#0B0F19',
+              card: '#111827',
+              input: '#1F2937',
+              border: '#1E293B',
+              hover: '#1E293B'
+            }
+          },
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    /* Suporte suave a rolagem e estética mobile-first */
+    body {
+      background-color: #0B0F19;
+      color: #F8FAFC;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    
+    /* Scrollbar minimalista */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0B0F19;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1E293B;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #334155;
+    }
+
+    /* Animação suave para toasts e transições de abas */
+    .fade-in {
+      animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Gráfico SVG interativo */
+    .chart-point {
+      transition: r 0.15s ease, stroke-width 0.15s ease;
+    }
+    .chart-point:hover {
+      r: 6;
+      stroke-width: 3px;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col pb-20 md:pb-6 selection:bg-emerald-500/30 selection:text-emerald-300">
+
+  <!-- ================= TOP HEADER ================= -->
+  <header class="sticky top-0 z-40 bg-[#0B0F19]/90 backdrop-blur-md border-b border-surface-border px-4 lg:px-8 py-3.5 flex items-center justify-between gap-4">
+    <!-- Logo & Status -->
+    <div class="flex items-center gap-3">
+      <a href="#" onclick="switchTab('dashboard'); return false;" class="flex items-center gap-2 group">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-600 to-emerald-400 flex items-center justify-center text-slate-950 font-black shadow-lg shadow-emerald-500/20 group-hover:scale-105 transition-transform">
+          <i data-lucide="zap" class="w-5 h-5 fill-current"></i>
+        </div>
+        <div class="flex flex-col">
+          <span class="text-xl font-extrabold tracking-tight text-white flex items-center gap-1">
+            INFOFY
+            <span class="text-emerald-400 text-xs font-semibold px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20">PRO</span>
+          </span>
+        </div>
+      </a>
+    </div>
+
+    <!-- Navegação Desktop -->
+    <nav class="hidden md:flex items-center gap-1 bg-surface-card/60 p-1 rounded-xl border border-surface-border">
+      <button onclick="switchTab('dashboard')" id="nav-btn-dashboard" class="tab-nav-btn px-4 py-2 text-sm font-semibold rounded-lg text-emerald-400 bg-emerald-500/10 transition-all flex items-center gap-2">
+        <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+        Dashboard
+      </button>
+      <button onclick="switchTab('products')" id="nav-btn-products" class="tab-nav-btn px-4 py-2 text-sm font-semibold rounded-lg text-slate-400 hover:text-white transition-all flex items-center gap-2">
+        <i data-lucide="package" class="w-4 h-4"></i>
+        Meus Produtos
+      </button>
+      <button onclick="switchTab('marketplace')" id="nav-btn-marketplace" class="tab-nav-btn px-4 py-2 text-sm font-semibold rounded-lg text-slate-400 hover:text-white transition-all flex items-center gap-2">
+        <i data-lucide="store" class="w-4 h-4"></i>
+        Marketplace
+      </button>
+      <button onclick="switchTab('checkout')" id="nav-btn-checkout" class="tab-nav-btn px-4 py-2 text-sm font-semibold rounded-lg text-slate-400 hover:text-white transition-all flex items-center gap-2">
+        <i data-lucide="shopping-bag" class="w-4 h-4"></i>
+        Checkout Builder
+      </button>
+    </nav>
+
+    <!-- Saldo & Ações Rápidas -->
+    <div class="flex items-center gap-3">
+      <!-- Card Compacto de Saldo -->
+      <div class="flex items-center gap-2.5 bg-surface-card border border-surface-border px-3 py-1.5 rounded-xl">
+        <div class="text-right">
+          <p class="text-[10px] text-slate-400 uppercase tracking-wider font-medium">Saldo Disponível</p>
+          <p id="header-balance" class="text-xs sm:text-sm font-bold text-emerald-400 font-mono tabular-nums">R$ 1.250,00</p>
+        </div>
+        <button onclick="openWithdrawModal()" class="px-2.5 py-1 text-xs font-semibold bg-emerald-500 hover:bg-emerald-400 text-slate-950 rounded-lg transition-colors flex items-center gap-1 shadow-sm shadow-emerald-500/25 active:scale-95" title="Solicitar Saque PIX">
+          <i data-lucide="arrow-up-right" class="w-3.5 h-3.5 stroke-[2.5]"></i>
+          <span class="hidden sm:inline">Sacar</span>
+        </button>
+      </div>
+
+      <!-- Som de Notificação / Teste de Venda -->
+      <button onclick="triggerSimulatedSale()" class="hidden sm:flex items-center justify-center w-9 h-9 rounded-xl bg-surface-card hover:bg-surface-hover border border-surface-border text-slate-300 hover:text-emerald-400 transition-colors" title="Simular Nova Venda (Som Plim-Plim)">
+        <i data-lucide="bell-ring" class="w-4 h-4"></i>
+      </button>
+
+      <!-- Perfil Usuário -->
+      <div class="flex items-center gap-2 pl-1 border-l border-surface-border">
+        <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-500 text-white font-bold text-xs flex items-center justify-center ring-2 ring-emerald-500/30">
+          MS
+        </div>
+        <div class="hidden xl:block text-left text-xs leading-tight">
+          <p class="font-semibold text-slate-200">Mateus Silva</p>
+          <span class="text-[11px] text-emerald-400 font-medium">Produtor Platinum</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= CONTEÚDO PRINCIPAL (ABAS) ================= -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+
+    <!-- ################### ABA 1: DASHBOARD ################### -->
+    <section id="tab-dashboard" class="tab-content fade-in space-y-6">
+      <!-- Boas-vindas e Filtros de Período -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">Visão Geral de Vendas</h1>
+          <p class="text-sm text-slate-400 mt-1">Acompanhe seu desempenho de infoprodutos em tempo real.</p>
+        </div>
+        <!-- Seletor de Período -->
+        <div class="flex items-center gap-1 bg-surface-card p-1 rounded-xl border border-surface-border self-start sm:self-auto">
+          <button onclick="changeTimePeriod('today')" id="period-today" class="period-btn px-3 py-1.5 text-xs font-semibold rounded-lg text-white bg-slate-800 transition-colors">Hoje</button>
+          <button onclick="changeTimePeriod('7d')" id="period-7d" class="period-btn px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition-colors">7 dias</button>
+          <button onclick="changeTimePeriod('30d')" id="period-30d" class="period-btn px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition-colors">30 dias</button>
+          <button onclick="changeTimePeriod('year')" id="period-year" class="period-btn px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition-colors">Este Ano</button>
+        </div>
+      </div>
+
+      <!-- CARDS DE MÉTRICAS PRINCIPAIS -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <!-- Vendas de Hoje -->
+        <div class="bg-surface-card border border-surface-border rounded-2xl p-4 sm:p-5 flex flex-col justify-between hover:border-emerald-500/30 transition-all group">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-medium text-slate-400">Vendas Hoje</span>
+            <div class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
+              <i data-lucide="trending-up" class="w-4 h-4"></i>
+            </div>
+          </div>
+          <div>
+            <div id="stat-today-value" class="text-xl sm:text-2xl font-bold font-mono text-white tabular-nums">R$ 840,00</div>
+            <div class="flex items-center gap-1.5 mt-1.5 text-xs text-emerald-400 font-medium">
+              <i data-lucide="arrow-up" class="w-3.5 h-3.5"></i>
+              <span>+18.4% vs ontem</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Vendas do Mês -->
+        <div class="bg-surface-card border border-surface-border rounded-2xl p-4 sm:p-5 flex flex-col justify-between hover:border-emerald-500/30 transition-all group">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-medium text-slate-400">Vendas do Mês</span>
+            <div class="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-400 flex items-center justify-center">
+              <i data-lucide="calendar" class="w-4 h-4"></i>
+            </div>
+          </div>
+          <div>
+            <div id="stat-month-value" class="text-xl sm:text-2xl font-bold font-mono text-white tabular-nums">R$ 14.890,00</div>
+            <div class="flex items-center gap-1.5 mt-1.5 text-xs text-emerald-400 font-medium">
+              <i data-lucide="arrow-up" class="w-3.5 h-3.5"></i>
+              <span>+24.2% vs mês anterior</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Taxa de Reembolso -->
+        <div class="bg-surface-card border border-surface-border rounded-2xl p-4 sm:p-5 flex flex-col justify-between hover:border-emerald-500/30 transition-all group">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-medium text-slate-400">Reembolsos</span>
+            <div class="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center">
+              <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+            </div>
+          </div>
+          <div>
+            <div class="text-xl sm:text-2xl font-bold font-mono text-white tabular-nums">1.2%</div>
+            <div class="flex items-center gap-1.5 mt-1.5 text-xs text-slate-400 font-medium">
+              <span class="text-emerald-400 font-semibold">Excelente</span>
+              <span>· 3 pedidos</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Saldo para Saque -->
+        <div class="bg-gradient-to-br from-surface-card to-emerald-950/20 border border-emerald-500/30 rounded-2xl p-4 sm:p-5 flex flex-col justify-between shadow-lg shadow-emerald-950/20">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-medium text-emerald-300">Disponível para Saque</span>
+            <button onclick="openWithdrawModal()" class="text-xs text-emerald-400 hover:text-emerald-300 font-bold underline underline-offset-2">Sacar</button>
+          </div>
+          <div>
+            <div id="stat-balance-card" class="text-xl sm:text-2xl font-bold font-mono text-emerald-400 tabular-nums">R$ 1.250,00</div>
+            <div class="text-xs text-slate-400 mt-1.5 flex items-center gap-1">
+              <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-400"></i>
+              <span>Transferência PIX imediata</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- GRÁFICO DE FATURAMENTO + RESUMO DE CONVERSÃO -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Gráfico Visual Interativo -->
+        <div class="lg:col-span-2 bg-surface-card border border-surface-border rounded-2xl p-5 sm:p-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+            <div>
+              <h2 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+                Faturamento Recente
+                <span id="chart-period-badge" class="text-xs font-normal text-slate-400">Últimos 7 dias</span>
+              </h2>
+              <p class="text-xs text-slate-400">Valores brutos processados via PIX, Cartão e Boleto</p>
+            </div>
+            <div class="flex items-center gap-4 text-xs">
+              <div class="flex items-center gap-2">
+                <span class="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span>
+                <span class="text-slate-300">Aprovados</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="w-3 h-3 rounded-full bg-slate-700 inline-block"></span>
+                <span class="text-slate-400">Pendentes</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- SVG Chart Customizado -->
+          <div class="relative w-full h-56 sm:h-64 pt-2">
+            <!-- Linhas de grade horizontal -->
+            <div class="absolute inset-0 flex flex-col justify-between pointer-events-none text-[10px] text-slate-600 font-mono">
+              <div class="border-b border-surface-border/60 pb-1 flex justify-between"><span>R$ 3.000</span></div>
+              <div class="border-b border-surface-border/60 pb-1 flex justify-between"><span>R$ 2.000</span></div>
+              <div class="border-b border-surface-border/60 pb-1 flex justify-between"><span>R$ 1.000</span></div>
+              <div class="border-b border-surface-border pb-1 flex justify-between"><span>R$ 0</span></div>
+            </div>
+
+            <!-- SVG com Área gradiente e Linha -->
+            <svg id="sales-svg-chart" class="w-full h-full overflow-visible relative z-10" viewBox="0 0 700 200" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="emeraldGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stop-color="#10B981" stop-opacity="0.4" />
+                  <stop offset="100%" stop-color="#10B981" stop-opacity="0.0" />
+                </linearGradient>
+              </defs>
+              <!-- Área de fundo preenchida -->
+              <path id="chart-area-path" d="M 0 160 L 100 130 L 200 145 L 300 90 L 400 110 L 500 50 L 600 70 L 700 35 L 700 200 L 0 200 Z" fill="url(#emeraldGradient)" />
+              <!-- Linha principal com stroke -->
+              <path id="chart-line-path" d="M 0 160 L 100 130 L 200 145 L 300 90 L 400 110 L 500 50 L 600 70 L 700 35" fill="none" stroke="#10B981" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" />
+              <!-- Pontos de dados interativos -->
+              <circle cx="100" cy="130" r="4.5" fill="#0B0F19" stroke="#10B981" stroke-width="2.5" class="chart-point cursor-pointer" onclick="showChartTooltip(100, 130, 'Seg: R$ 890,00')" />
+              <circle cx="200" cy="145" r="4.5" fill="#0B0F19" stroke="#10B981" stroke-width="2.5" class="chart-point cursor-pointer" onclick="showChartTooltip(200, 145, 'Ter: R$ 680,00')" />
+              <circle cx="300" cy="90" r="4.5" fill="#0B0F19" stroke="#10B981" stroke-width="2.5" class="chart-point cursor-pointer" onclick="showChartTooltip(300, 90, 'Qua: R$ 1.540,00')" />
+              <circle cx="400" cy="110" r="4.5" fill="#0B0F19" stroke="#10B981" stroke-width="2.5" class="chart-point cursor-pointer" onclick="showChartTooltip(400, 110, 'Qui: R$ 1.280,00')" />
+              <circle cx="500" cy="50" r="4.5" fill="#0B0F19" stroke="#10B981" stroke-width="2.5" class="chart-point cursor-pointer" onclick="showChartTooltip(500, 50, 'Sex: R$ 2.450,00')" />
+              <circle cx="600" cy="70" r="4.5" fill="#0B0F19" stroke="#10B981" stroke-width="2.5" class="chart-point cursor-pointer" onclick="showChartTooltip(600, 70, 'Sáb: R$ 1.980,00')" />
+              <circle cx="700" cy="35" r="5.5" fill="#10B981" stroke="#F8FAFC" stroke-width="2" class="chart-point cursor-pointer" onclick="showChartTooltip(700, 35, 'Hoje: R$ 2.840,00')" />
+            </svg>
+          </div>
+
+          <!-- Rótulos de dias no eixo X -->
+          <div id="chart-labels-container" class="flex justify-between text-[11px] font-medium text-slate-400 mt-3 pt-2 border-t border-surface-border">
+            <span>Seg</span>
+            <span>Ter</span>
+            <span>Qua</span>
+            <span>Qui</span>
+            <span>Sex</span>
+            <span>Sáb</span>
+            <span class="text-emerald-400 font-bold">Hoje</span>
+          </div>
+        </div>
+
+        <!-- Funil e Métodos de Pagamento -->
+        <div class="bg-surface-card border border-surface-border rounded-2xl p-5 sm:p-6 flex flex-col justify-between">
+          <div>
+            <h2 class="text-base sm:text-lg font-bold text-white mb-1">Métodos de Pagamento</h2>
+            <p class="text-xs text-slate-400 mb-5">Distribuição das conversões do checkout</p>
+
+            <div class="space-y-4">
+              <!-- PIX -->
+              <div>
+                <div class="flex justify-between text-xs font-semibold mb-1">
+                  <span class="text-slate-200 flex items-center gap-1.5">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span> PIX Instantâneo
+                  </span>
+                  <span class="text-white font-mono">72% <span class="text-slate-500 font-normal">(R$ 10.720)</span></span>
+                </div>
+                <div class="w-full bg-slate-800 rounded-full h-2">
+                  <div class="bg-emerald-500 h-2 rounded-full" style="width: 72%"></div>
+                </div>
+              </div>
+
+              <!-- Cartão de Crédito -->
+              <div>
+                <div class="flex justify-between text-xs font-semibold mb-1">
+                  <span class="text-slate-200 flex items-center gap-1.5">
+                    <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span> Cartão de Crédito
+                  </span>
+                  <span class="text-white font-mono">23% <span class="text-slate-500 font-normal">(R$ 3.424)</span></span>
+                </div>
+                <div class="w-full bg-slate-800 rounded-full h-2">
+                  <div class="bg-blue-500 h-2 rounded-full" style="width: 23%"></div>
+                </div>
+              </div>
+
+              <!-- Boleto -->
+              <div>
+                <div class="flex justify-between text-xs font-semibold mb-1">
+                  <span class="text-slate-200 flex items-center gap-1.5">
+                    <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> Boleto Bancário
+                  </span>
+                  <span class="text-white font-mono">5% <span class="text-slate-500 font-normal">(R$ 745)</span></span>
+                </div>
+                <div class="w-full bg-slate-800 rounded-full h-2">
+                  <div class="bg-amber-500 h-2 rounded-full" style="width: 5%"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Destaque de Conversão -->
+          <div class="mt-6 pt-5 border-t border-surface-border bg-slate-900/60 p-4 rounded-xl border border-surface-border">
+            <div class="flex items-center justify-between">
+              <div>
+                <span class="text-[11px] text-slate-400 uppercase font-semibold">Conversão de Checkout</span>
+                <p class="text-lg font-bold text-emerald-400 font-mono">48.6%</p>
+              </div>
+              <div class="text-right">
+                <span class="text-[11px] text-slate-400 uppercase font-semibold">Order Bump</span>
+                <p class="text-lg font-bold text-purple-400 font-mono">31.2%</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TRANSAÇÕES RECENTES EM TEMPO REAL -->
+      <div class="bg-surface-card border border-surface-border rounded-2xl p-5 sm:p-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+          <div>
+            <h2 class="text-base sm:text-lg font-bold text-white">Transações Recentes</h2>
+            <p class="text-xs text-slate-400">Vendas registradas nas últimas horas</p>
+          </div>
+          <button onclick="triggerSimulatedSale()" class="text-xs font-semibold text-emerald-400 hover:text-emerald-300 flex items-center gap-1.5 self-start sm:self-auto py-1 px-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 active:scale-95 transition-all">
+            <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
+            Simular Venda Instantânea
+          </button>
+        </div>
+
+        <!-- Tabela Responsiva de Vendas -->
+        <div class="overflow-x-auto -mx-5 sm:mx-0">
+          <table class="w-full text-left text-xs whitespace-nowrap min-w-[620px]">
+            <thead>
+              <tr class="border-b border-surface-border text-slate-400 font-semibold uppercase tracking-wider text-[10px]">
+                <th class="py-3 px-4">Comprador</th>
+                <th class="py-3 px-4">Produto</th>
+                <th class="py-3 px-4">Método</th>
+                <th class="py-3 px-4">Valor Líquido</th>
+                <th class="py-3 px-4">Status</th>
+                <th class="py-3 px-4 text-right">Data/Hora</th>
+              </tr>
+            </thead>
+            <tbody id="transactions-list-body" class="divide-y divide-surface-border/60">
+              <!-- Item 1 -->
+              <tr class="hover:bg-slate-800/40 transition-colors">
+                <td class="py-3.5 px-4 font-medium text-slate-200 flex items-center gap-2">
+                  <div class="w-7 h-7 rounded-full bg-emerald-500/20 text-emerald-400 font-bold flex items-center justify-center text-[10px]">RL</div>
+                  <span>Rodrigo Lima</span>
+                </td>
+                <td class="py-3.5 px-4 text-slate-300 font-medium">Mentoria Escala 10k</td>
+                <td class="py-3.5 px-4 text-slate-400">
+                  <span class="flex items-center gap-1.5 text-emerald-400 font-medium">
+                    <i data-lucide="qr-code" class="w-3.5 h-3.5"></i> PIX
+                  </span>
+                </td>
+                <td class="py-3.5 px-4 font-mono font-bold text-white">R$ 997,00</td>
+                <td class="py-3.5 px-4">
+                  <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    Aprovado
+                  </span>
+                </td>
+                <td class="py-3.5 px-4 text-slate-400 text-right">Hoje, 10:42</td>
+              </tr>
+
+              <!-- Item 2 -->
+              <tr class="hover:bg-slate-800/40 transition-colors">
+                <td class="py-3.5 px-4 font-medium text-slate-200 flex items-center gap-2">
+                  <div class="w-7 h-7 rounded-full bg-blue-500/20 text-blue-400 font-bold flex items-center justify-center text-[10px]">CF</div>
+                  <span>Camila Ferreira</span>
+                </td>
+                <td class="py-3.5 px-4 text-slate-300 font-medium">E-book Copywriting Milionário</td>
+                <td class="py-3.5 px-4 text-slate-400">
+                  <span class="flex items-center gap-1.5 text-blue-400 font-medium">
+                    <i data-lucide="credit-card" class="w-3.5 h-3.5"></i> Cartão 6x
+                  </span>
+                </td>
+                <td class="py-3.5 px-4 font-mono font-bold text-white">R$ 67,00</td>
+                <td class="py-3.5 px-4">
+                  <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    Aprovado
+                  </span>
+                </td>
+                <td class="py-3.5 px-4 text-slate-400 text-right">Hoje, 09:15</td>
+              </tr>
+
+              <!-- Item 3 -->
+              <tr class="hover:bg-slate-800/40 transition-colors">
+                <td class="py-3.5 px-4 font-medium text-slate-200 flex items-center gap-2">
+                  <div class="w-7 h-7 rounded-full bg-purple-500/20 text-purple-400 font-bold flex items-center justify-center text-[10px]">BM</div>
+                  <span>Bruno Martins</span>
+                </td>
+                <td class="py-3.5 px-4 text-slate-300 font-medium">Tráfego Pago para Negócios</td>
+                <td class="py-3.5 px-4 text-slate-400">
+                  <span class="flex items-center gap-1.5 text-emerald-400 font-medium">
+                    <i data-lucide="qr-code" class="w-3.5 h-3.5"></i> PIX
+                  </span>
+                </td>
+                <td class="py-3.5 px-4 font-mono font-bold text-white">R$ 197,00</td>
+                <td class="py-3.5 px-4">
+                  <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    Aprovado
+                  </span>
+                </td>
+                <td class="py-3.5 px-4 text-slate-400 text-right">Hoje, 08:30</td>
+              </tr>
+
+              <!-- Item 4 -->
+              <tr class="hover:bg-slate-800/40 transition-colors">
+                <td class="py-3.5 px-4 font-medium text-slate-200 flex items-center gap-2">
+                  <div class="w-7 h-7 rounded-full bg-amber-500/20 text-amber-400 font-bold flex items-center justify-center text-[10px]">LO</div>
+                  <span>Lucas Oliveira</span>
+                </td>
+                <td class="py-3.5 px-4 text-slate-300 font-medium">Comunidade Viver de Dropshipping</td>
+                <td class="py-3.5 px-4 text-slate-400">
+                  <span class="flex items-center gap-1.5 text-amber-400 font-medium">
+                    <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Boleto
+                  </span>
+                </td>
+                <td class="py-3.5 px-4 font-mono font-bold text-white">R$ 147,00</td>
+                <td class="py-3.5 px-4">
+                  <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                    Pendente
+                  </span>
+                </td>
+                <td class="py-3.5 px-4 text-slate-400 text-right">Ontem, 21:05</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ################### ABA 2: MEUS PRODUTOS ################### -->
+    <section id="tab-products" class="tab-content hidden fade-in space-y-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">Meus Infoprodutos</h1>
+          <p class="text-sm text-slate-400 mt-1">Gerencie seus cursos, e-books, mentorias e checkouts cadastrados.</p>
+        </div>
+        <button onclick="openNewProductModal()" class="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-xl transition-all shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 self-start sm:self-auto active:scale-95">
+          <i data-lucide="plus" class="w-4 h-4 stroke-[3]"></i>
+          <span>Cadastrar Novo Produto</span>
+        </button>
+      </div>
+
+      <!-- Barra de Filtros e Busca -->
+      <div class="flex flex-col sm:flex-row gap-3">
+        <div class="relative flex-1">
+          <i data-lucide="search" class="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+          <input type="text" id="my-products-search" oninput="filterMyProducts()" placeholder="Buscar por título ou formato..." class="w-full bg-surface-card border border-surface-border rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-colors" />
+        </div>
+        <div class="flex gap-2">
+          <select id="my-products-filter-type" onchange="filterMyProducts()" class="bg-surface-card border border-surface-border rounded-xl px-3 py-2.5 text-xs font-medium text-slate-300 focus:outline-none focus:border-emerald-500">
+            <option value="all">Todos os Tipos</option>
+            <option value="curso">Cursos Online</option>
+            <option value="ebook">E-books / PDF</option>
+            <option value="mentoria">Mentorias</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Grid de Meus Produtos -->
+      <div id="my-products-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        <!-- Renderizado dinamicamente via JS com dados padrão -->
+      </div>
+    </section>
+
+    <!-- ################### ABA 3: MARKETPLACE / VITRINE ################### -->
+    <section id="tab-marketplace" class="tab-content hidden fade-in space-y-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">Marketplace de Afiliados</h1>
+          <p class="text-sm text-slate-400 mt-1">Descubra infoprodutos validados para promover e faturar até 65% de comissão.</p>
+        </div>
+        <div class="flex items-center gap-2 text-xs text-slate-400 bg-surface-card px-3 py-2 rounded-xl border border-surface-border self-start sm:self-auto">
+          <i data-lucide="shield-alert" class="w-4 h-4 text-emerald-400"></i>
+          <span>Afiliação com 1-clique & atribuição segura por cookie</span>
+        </div>
+      </div>
+
+      <!-- Categorias Rápidas -->
+      <div class="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
+        <button onclick="filterMarketplace('all')" class="market-filter-btn px-4 py-2 rounded-xl font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 whitespace-nowrap">Todos os Infoprodutos</button>
+        <button onclick="filterMarketplace('curso')" class="market-filter-btn px-4 py-2 rounded-xl font-semibold bg-surface-card text-slate-400 hover:text-white border border-surface-border whitespace-nowrap">Cursos em Vídeo</button>
+        <button onclick="filterMarketplace('ebook')" class="market-filter-btn px-4 py-2 rounded-xl font-semibold bg-surface-card text-slate-400 hover:text-white border border-surface-border whitespace-nowrap">E-books & Guias</button>
+        <button onclick="filterMarketplace('mentoria')" class="market-filter-btn px-4 py-2 rounded-xl font-semibold bg-surface-card text-slate-400 hover:text-white border border-surface-border whitespace-nowrap">Mentorias & Comunidades</button>
+      </div>
+
+      <!-- Grid de Infoprodutos da Vitrine -->
+      <div id="marketplace-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Renderizado dinamicamente via JS -->
+      </div>
+    </section>
+
+    <!-- ################### ABA 4: CHECKOUT BUILDER & PREVIEW ################### -->
+    <section id="tab-checkout" class="tab-content hidden fade-in space-y-6">
+      <div class="max-w-4xl mx-auto">
+        <div class="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white flex items-center gap-2">
+              Preview do Checkout de Alta Conversão
+              <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Modelo Oficial Kiwify</span>
+            </h1>
+            <p class="text-sm text-slate-400 mt-1">Experimente a experiência de pagamento com PIX dinâmico, Order Bump e cálculo em tempo real.</p>
+          </div>
+          <button onclick="openConfigCheckoutModal()" class="text-xs font-semibold text-slate-300 hover:text-white bg-surface-card hover:bg-surface-hover border border-surface-border px-3.5 py-2 rounded-xl flex items-center gap-2 self-start sm:self-auto transition-colors">
+            <i data-lucide="sliders" class="w-3.5 h-3.5"></i>
+            Personalizar Preço & Bumps
+          </button>
+        </div>
+
+        <!-- CONTAINER DO CHECKOUT INTERATIVO -->
+        <div class="bg-surface-card border border-surface-border rounded-2xl overflow-hidden shadow-2xl">
+          <!-- Faixa Superior de Escassez / Timer -->
+          <div class="bg-emerald-600/90 text-slate-950 font-bold text-xs py-2 px-4 flex items-center justify-between">
+            <span class="flex items-center gap-1.5">
+              <i data-lucide="clock" class="w-4 h-4"></i>
+              <span>OFERTA ESPECIAL: Esta condição expira em breve!</span>
+            </span>
+            <span id="checkout-timer" class="font-mono text-sm tracking-wider bg-slate-950 text-emerald-400 px-2 py-0.5 rounded font-extrabold">14:59</span>
+          </div>
+
+          <div class="p-4 sm:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <!-- Coluna Esquerda: Formulário do Comprador e Pagamento (7 colunas) -->
+            <div class="lg:col-span-7 space-y-6">
+              <!-- Dados Pessoais -->
+              <div>
+                <h3 class="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2 mb-3">
+                  <span class="w-5 h-5 rounded-full bg-emerald-500 text-slate-950 font-bold text-xs flex items-center justify-center">1</span>
+                  Dados Pessoais
+                </h3>
+                <div class="space-y-3">
+                  <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Nome Completo</label>
+                    <input type="text" id="checkout-name" value="Lucas Mendes de Albuquerque" placeholder="Seu nome completo" class="w-full bg-surface-input border border-surface-border rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500" />
+                  </div>
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label class="block text-xs font-medium text-slate-300 mb-1">E-mail para Acesso</label>
+                      <input type="email" id="checkout-email" value="lucas.mendes@email.com" placeholder="seu@email.com" class="w-full bg-surface-input border border-surface-border rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500" />
+                    </div>
+                    <div>
+                      <label class="block text-xs font-medium text-slate-300 mb-1">WhatsApp / Celular</label>
+                      <input type="text" id="checkout-phone" value="(11) 98765-4321" placeholder="(00) 00000-0000" class="w-full bg-surface-input border border-surface-border rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Seleção do Método de Pagamento -->
+              <div>
+                <h3 class="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2 mb-3">
+                  <span class="w-5 h-5 rounded-full bg-emerald-500 text-slate-950 font-bold text-xs flex items-center justify-center">2</span>
+                  Forma de Pagamento
+                </h3>
+
+                <!-- Seletor em Abas -->
+                <div class="grid grid-cols-3 gap-2 p-1 bg-surface-input rounded-xl border border-surface-border mb-4">
+                  <button type="button" onclick="selectPayMethod('pix')" id="pay-tab-pix" class="py-2.5 px-2 rounded-lg text-xs font-bold transition-all flex flex-col sm:flex-row items-center justify-center gap-1.5 bg-emerald-500 text-slate-950 shadow-sm">
+                    <i data-lucide="qr-code" class="w-4 h-4"></i>
+                    <span>PIX Instantâneo</span>
+                  </button>
+                  <button type="button" onclick="selectPayMethod('card')" id="pay-tab-card" class="py-2.5 px-2 rounded-lg text-xs font-bold transition-all flex flex-col sm:flex-row items-center justify-center gap-1.5 text-slate-400 hover:text-white">
+                    <i data-lucide="credit-card" class="w-4 h-4"></i>
+                    <span>Cartão de Crédito</span>
+                  </button>
+                  <button type="button" onclick="selectPayMethod('boleto')" id="pay-tab-boleto" class="py-2.5 px-2 rounded-lg text-xs font-bold transition-all flex flex-col sm:flex-row items-center justify-center gap-1.5 text-slate-400 hover:text-white">
+                    <i data-lucide="file-text" class="w-4 h-4"></i>
+                    <span>Boleto</span>
+                  </button>
+                </div>
+
+                <!-- Painel: PIX -->
+                <div id="panel-pix" class="bg-surface-input/60 border border-surface-border rounded-xl p-4 text-center space-y-3">
+                  <div class="inline-flex p-3 bg-white rounded-xl shadow-lg">
+                    <!-- QR Code Fictício SVG Elegante -->
+                    <svg class="w-36 h-36" viewBox="0 0 100 100" fill="#0F172A">
+                      <rect width="100" height="100" fill="#FFFFFF"/>
+                      <path d="M10 10 h25 v25 h-25 z M15 15 v15 h15 v-15 z M19 19 h7 v7 h-7 z" fill="#000000"/>
+                      <path d="M65 10 h25 v25 h-25 z M70 15 v15 h15 v-15 z M74 19 h7 v7 h-7 z" fill="#000000"/>
+                      <path d="M10 65 h25 v25 h-25 z M15 70 v15 h15 v-15 z M19 74 h7 v7 h-7 z" fill="#000000"/>
+                      <rect x="42" y="15" width="8" height="8" fill="#10B981"/>
+                      <rect x="52" y="25" width="8" height="8" fill="#000000"/>
+                      <rect x="40" y="40" width="20" height="20" fill="#000000"/>
+                      <rect x="45" y="45" width="10" height="10" fill="#10B981"/>
+                      <rect x="15" y="45" width="8" height="8" fill="#000000"/>
+                      <rect x="75" y="50" width="12" height="6" fill="#000000"/>
+                      <rect x="65" y="70" width="10" height="10" fill="#10B981"/>
+                      <rect x="80" y="80" width="10" height="10" fill="#000000"/>
+                    </svg>
+                  </div>
+                  <p class="text-xs text-slate-300 font-medium">Liberação imediata! Escaneie o QR Code no app do seu banco ou use a chave abaixo:</p>
+                  
+                  <div class="flex items-center gap-2 max-w-sm mx-auto">
+                    <input type="text" readonly id="pix-copy-input" value="00020126580014br.gov.bcb.pix0136infofy-pagamento-instantaneo-99725835400" class="bg-surface-card border border-surface-border text-slate-300 text-xs rounded-lg px-3 py-2 w-full font-mono truncate" />
+                    <button type="button" onclick="copyPixCode()" class="px-3 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-lg transition-colors whitespace-nowrap flex items-center gap-1">
+                      <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                      <span>Copiar</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Painel: Cartão de Crédito -->
+                <div id="panel-card" class="hidden space-y-3 bg-surface-input/60 border border-surface-border rounded-xl p-4">
+                  <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Número do Cartão</label>
+                    <div class="relative">
+                      <input type="text" placeholder="0000 0000 0000 0000" maxlength="19" class="w-full bg-surface-card border border-surface-border rounded-xl pl-3.5 pr-12 py-2.5 text-sm text-white font-mono placeholder-slate-500 focus:outline-none focus:border-emerald-500" />
+                      <div class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                        <span class="text-[10px] font-bold text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded">VISA/MC</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="grid grid-cols-2 gap-3">
+                    <div>
+                      <label class="block text-xs font-medium text-slate-300 mb-1">Validade (MM/AA)</label>
+                      <input type="text" placeholder="12/29" maxlength="5" class="w-full bg-surface-card border border-surface-border rounded-xl px-3.5 py-2.5 text-sm text-white font-mono placeholder-slate-500 focus:outline-none focus:border-emerald-500" />
+                    </div>
+                    <div>
+                      <label class="block text-xs font-medium text-slate-300 mb-1">Código CVV</label>
+                      <input type="text" placeholder="123" maxlength="4" class="w-full bg-surface-card border border-surface-border rounded-xl px-3.5 py-2.5 text-sm text-white font-mono placeholder-slate-500 focus:outline-none focus:border-emerald-500" />
+                    </div>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Parcelamento</label>
+                    <select id="checkout-installments" onchange="calculateCheckoutTotal()" class="w-full bg-surface-card border border-surface-border rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500">
+                      <option value="1">1x à vista (Sem juros)</option>
+                      <option value="2">2x parcelado</option>
+                      <option value="3">3x parcelado</option>
+                      <option value="6">6x parcelado</option>
+                      <option value="12" selected>12x de R$ 9,70</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Painel: Boleto -->
+                <div id="panel-boleto" class="hidden bg-surface-input/60 border border-surface-border rounded-xl p-4 text-center space-y-2">
+                  <i data-lucide="barcode" class="w-10 h-10 text-amber-400 mx-auto"></i>
+                  <p class="text-xs text-slate-300 font-medium">O boleto tem vencimento em 3 dias úteis. A compensação ocorre em até 48h úteis após o pagamento.</p>
+                </div>
+              </div>
+
+              <!-- ORDER BUMP (OFERTA COMPLEMENTAR DE 1-CLIQUE) -->
+              <div class="border-2 border-dashed border-purple-500/50 bg-purple-950/20 rounded-xl p-4 transition-all">
+                <label class="flex items-start gap-3 cursor-pointer">
+                  <input type="checkbox" id="order-bump-checkbox" onchange="toggleOrderBump()" class="mt-1 w-5 h-5 rounded border-purple-400 text-purple-600 focus:ring-purple-500 focus:ring-offset-slate-900 bg-surface-card cursor-pointer" />
+                  <div class="flex-1">
+                    <div class="flex items-center justify-between gap-2">
+                      <span class="text-xs font-bold text-purple-300 uppercase tracking-wide flex items-center gap-1">
+                        <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+                        Leve Também: Pack de 50 Templates Prontos
+                      </span>
+                      <span class="text-xs font-bold text-white font-mono bg-purple-500/20 px-2 py-0.5 rounded">+ R$ 27,00</span>
+                    </div>
+                    <p class="text-xs text-slate-300 mt-1">Acelere seus resultados com modelos copiáveis prontos para usar hoje mesmo. Oferta exclusiva nesta página.</p>
+                  </div>
+                </label>
+              </div>
+
+              <!-- Cupom de Desconto -->
+              <div class="flex items-center gap-2">
+                <input type="text" id="coupon-code-input" placeholder="Possui cupom? Ex: DESCONTO10" class="flex-1 bg-surface-input border border-surface-border rounded-xl px-3.5 py-2 text-xs text-white uppercase placeholder-slate-500 focus:outline-none focus:border-emerald-500" />
+                <button type="button" onclick="applyDiscountCoupon()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-surface-border transition-colors">
+                  Aplicar
+                </button>
+              </div>
+              <p id="coupon-feedback" class="text-xs font-semibold hidden"></p>
+
+              <!-- Botão de Finalizar Compra -->
+              <button type="button" onclick="processCheckoutPayment()" id="btn-submit-order" class="w-full py-4 bg-emerald-500 hover:bg-emerald-400 active:scale-[0.99] text-slate-950 font-extrabold text-base rounded-xl transition-all shadow-xl shadow-emerald-500/25 flex items-center justify-center gap-2">
+                <i data-lucide="lock" class="w-5 h-5"></i>
+                <span id="btn-submit-text">FINALIZAR COMPRA AGORA</span>
+              </button>
+
+              <div class="flex items-center justify-center gap-6 text-[11px] text-slate-400">
+                <span class="flex items-center gap-1">
+                  <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-400"></i> Pagamento 100% Seguro
+                </span>
+                <span class="flex items-center gap-1">
+                  <i data-lucide="award" class="w-3.5 h-3.5 text-emerald-400"></i> Garantia de 7 Dias
+                </span>
+                <span class="flex items-center gap-1">
+                  <i data-lucide="zap" class="w-3.5 h-3.5 text-emerald-400"></i> Acesso Imediato
+                </span>
+              </div>
+            </div>
+
+            <!-- Coluna Direita: Resumo do Pedido & Prova Social (5 colunas) -->
+            <div class="lg:col-span-5 bg-surface-input/40 border border-surface-border rounded-xl p-5 space-y-5">
+              <h3 class="text-sm font-bold text-white uppercase tracking-wider">Resumo do Pedido</h3>
+
+              <!-- Detalhes do Infoproduto -->
+              <div class="flex gap-3">
+                <div class="w-16 h-16 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center text-slate-950 shrink-0 font-black">
+                  <i data-lucide="play" class="w-7 h-7 fill-current"></i>
+                </div>
+                <div>
+                  <h4 id="checkout-product-title" class="text-sm font-bold text-white leading-snug">Fórmula do Infoproduto Lucrativo</h4>
+                  <p class="text-xs text-slate-400 mt-0.5">Acesso vitalício + Atualizações</p>
+                  <span class="inline-block mt-1 text-[11px] text-emerald-400 font-semibold">Garantia incondicional</span>
+                </div>
+              </div>
+
+              <!-- Discriminação de Valores -->
+              <div class="space-y-2 text-xs border-t border-b border-surface-border py-4">
+                <div class="flex justify-between text-slate-300">
+                  <span>Preço original</span>
+                  <span class="line-through text-slate-500">R$ 297,00</span>
+                </div>
+                <div class="flex justify-between text-slate-300">
+                  <span>Preço promocional</span>
+                  <span id="checkout-base-price" class="font-mono text-white">R$ 97,00</span>
+                </div>
+                <div id="row-order-bump" class="hidden justify-between text-purple-300 font-medium">
+                  <span>+ Pack 50 Templates (Order Bump)</span>
+                  <span class="font-mono">R$ 27,00</span>
+                </div>
+                <div id="row-discount" class="hidden justify-between text-emerald-400 font-medium">
+                  <span id="discount-label">Desconto de Cupom (10%)</span>
+                  <span id="discount-amount" class="font-mono">- R$ 9,70</span>
+                </div>
+              </div>
+
+              <!-- Total Final -->
+              <div class="flex justify-between items-baseline">
+                <span class="text-sm font-bold text-white">Total a pagar:</span>
+                <div class="text-right">
+                  <div id="checkout-final-total" class="text-2xl font-black text-emerald-400 font-mono">R$ 97,00</div>
+                  <span id="checkout-installments-note" class="text-[11px] text-slate-400">ou em até 12x de R$ 9,70</span>
+                </div>
+              </div>
+
+              <!-- Depoimento Real / Avaliação -->
+              <div class="bg-surface-card border border-surface-border p-3.5 rounded-xl text-xs space-y-2">
+                <div class="flex items-center gap-1 text-amber-400">
+                  <i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i>
+                  <i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i>
+                  <i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i>
+                  <i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i>
+                  <i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i>
+                  <span class="text-slate-300 ml-1 font-semibold">4.9 / 5.0</span>
+                </div>
+                <p class="text-slate-300 italic">"Consegui minhas primeiras 20 vendas de infoprodutos em menos de 1 semana aplicando a metodologia deste treinamento. Sensacional!"</p>
+                <div class="flex items-center gap-2 pt-1">
+                  <div class="w-6 h-6 rounded-full bg-slate-700 flex items-center justify-center font-bold text-[10px] text-slate-300">GA</div>
+                  <span class="text-slate-400 font-medium">Gabriel Andrade · Aluno Verificado</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ================= BARRA DE NAVEGAÇÃO MOBILE (BOTTOM BAR) ================= -->
+  <nav class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#0B0F19]/95 backdrop-blur-lg border-t border-surface-border px-2 py-2 flex items-center justify-around">
+    <button onclick="switchTab('dashboard')" id="mobile-nav-dashboard" class="mobile-nav-item flex flex-col items-center gap-1 py-1 px-3 text-emerald-400">
+      <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+      <span class="text-[10px] font-bold">Dashboard</span>
+    </button>
+    <button onclick="switchTab('products')" id="mobile-nav-products" class="mobile-nav-item flex flex-col items-center gap-1 py-1 px-3 text-slate-400 hover:text-white">
+      <i data-lucide="package" class="w-5 h-5"></i>
+      <span class="text-[10px] font-bold">Produtos</span>
+    </button>
+    <button onclick="switchTab('marketplace')" id="mobile-nav-marketplace" class="mobile-nav-item flex flex-col items-center gap-1 py-1 px-3 text-slate-400 hover:text-white">
+      <i data-lucide="store" class="w-5 h-5"></i>
+      <span class="text-[10px] font-bold">Vitrine</span>
+    </button>
+    <button onclick="switchTab('checkout')" id="mobile-nav-checkout" class="mobile-nav-item flex flex-col items-center gap-1 py-1 px-3 text-slate-400 hover:text-white">
+      <i data-lucide="shopping-bag" class="w-5 h-5"></i>
+      <span class="text-[10px] font-bold">Checkout</span>
+    </button>
+  </nav>
+
+  <!-- ================= MODAL: CADASTRAR NOVO PRODUTO ================= -->
+  <div id="modal-new-product" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-surface-card border border-surface-border rounded-2xl max-w-lg w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto fade-in shadow-2xl">
+      <div class="flex items-center justify-between pb-3 border-b border-surface-border">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-bold">
+            <i data-lucide="plus" class="w-4 h-4"></i>
+          </div>
+          <h2 class="text-lg font-bold text-white">Criar Novo Infoproduto</h2>
+        </div>
+        <button onclick="closeNewProductModal()" class="text-slate-400 hover:text-white p-1 rounded-lg">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form id="form-new-product" onsubmit="handleCreateProduct(event)" class="space-y-4 text-xs">
+        <div>
+          <label class="block font-medium text-slate-300 mb-1">Nome do Infoproduto *</label>
+          <input type="text" id="new-prod-name" required placeholder="Ex: Método Vendas Automáticas 2026" class="w-full bg-surface-input border border-surface-border rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500" />
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block font-medium text-slate-300 mb-1">Tipo de Formato *</label>
+            <select id="new-prod-type" class="w-full bg-surface-input border border-surface-border rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500">
+              <option value="curso">Curso Online (Vídeo-aulas)</option>
+              <option value="ebook">E-book (PDF / Material)</option>
+              <option value="mentoria">Mentoria / Comunidade</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-medium text-slate-300 mb-1">Preço de Venda (R$) *</label>
+            <input type="number" step="0.01" id="new-prod-price" required placeholder="Ex: 197.00" class="w-full bg-surface-input border border-surface-border rounded-xl px-3.5 py-2.5 text-sm text-white font-mono placeholder-slate-500 focus:outline-none focus:border-emerald-500" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block font-medium text-slate-300 mb-1">Comissão de Afiliados (%)</label>
+            <input type="number" min="0" max="80" id="new-prod-commission" value="50" class="w-full bg-surface-input border border-surface-border rounded-xl px-3.5 py-2.5 text-sm text-white font-mono focus:outline-none focus:border-emerald-500" />
+          </div>
+          <div>
+            <label class="block font-medium text-slate-300 mb-1">Dias de Garantia</label>
+            <select id="new-prod-guarantee" class="w-full bg-surface-input border border-surface-border rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500">
+              <option value="7">7 dias (Padrão)</option>
+              <option value="15">15 dias</option>
+              <option value="30">30 dias</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-medium text-slate-300 mb-1">Descrição Comercial</label>
+          <textarea id="new-prod-desc" rows="3" placeholder="Explique a transformação que o aluno terá com este produto..." class="w-full bg-surface-input border border-surface-border rounded-xl px-3.5 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"></textarea>
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-3 border-t border-surface-border">
+          <button type="button" onclick="closeNewProductModal()" class="px-4 py-2.5 rounded-xl text-slate-300 hover:text-white font-semibold transition-colors">Cancelar</button>
+          <button type="submit" class="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-xl shadow-lg shadow-emerald-500/20 transition-all flex items-center gap-1.5">
+            <i data-lucide="check" class="w-4 h-4 stroke-[3]"></i>
+            Salvar e Publicar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: SOLICITAR SAQUE PIX ================= -->
+  <div id="modal-withdraw" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-surface-card border border-surface-border rounded-2xl max-w-md w-full p-6 space-y-4 fade-in shadow-2xl">
+      <div class="flex items-center justify-between pb-3 border-b border-surface-border">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-bold">
+            <i data-lucide="arrow-up-right" class="w-4 h-4 stroke-[2.5]"></i>
+          </div>
+          <h2 class="text-lg font-bold text-white">Solicitar Saque PIX</h2>
+        </div>
+        <button onclick="closeWithdrawModal()" class="text-slate-400 hover:text-white p-1 rounded-lg">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3.5 flex items-center justify-between">
+        <div>
+          <span class="text-xs text-slate-400">Saldo Disponível</span>
+          <p id="withdraw-available-balance" class="text-xl font-bold font-mono text-emerald-400">R$ 1.250,00</p>
+        </div>
+        <span class="text-[11px] font-semibold text-emerald-300 bg-emerald-500/20 px-2 py-1 rounded">Taxa zero (0%)</span>
+      </div>
+
+      <form id="form-withdraw" onsubmit="handleWithdrawSubmit(event)" class="space-y-3.5 text-xs">
+        <div>
+          <label class="block font-medium text-slate-300 mb-1">Tipo de Chave PIX</label>
+          <select id="withdraw-pix-type" class="w-full bg-surface-input border border-surface-border rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500">
+            <option value="cpf">CPF (Cadastrado)</option>
+            <option value="email">E-mail</option>
+            <option value="telefone">Celular</option>
+            <option value="aleatoria">Chave Aleatória (EVP)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block font-medium text-slate-300 mb-1">Chave PIX</label>
+          <input type="text" id="withdraw-pix-key" required value="123.456.789-00" class="w-full bg-surface-input border border-surface-border rounded-xl px-3.5 py-2.5 text-sm text-white font-mono focus:outline-none focus:border-emerald-500" />
+        </div>
+
+        <div>
+          <label class="block font-medium text-slate-300 mb-1">Valor do Saque (R$)</label>
+          <div class="relative">
+            <input type="number" step="10" min="50" max="1250" id="withdraw-amount" value="500" required class="w-full bg-surface-input border border-surface-border rounded-xl pl-3.5 pr-14 py-2.5 text-sm text-white font-mono focus:outline-none focus:border-emerald-500" />
+            <button type="button" onclick="setWithdrawMax()" class="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-emerald-400 hover:text-emerald-300 bg-slate-800 px-2 py-1 rounded">MÁXIMO</button>
+          </div>
+          <span class="text-[11px] text-slate-400 mt-1 block">Saque mínimo de R$ 50,00</span>
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-3 border-t border-surface-border">
+          <button type="button" onclick="closeWithdrawModal()" class="px-4 py-2.5 rounded-xl text-slate-300 hover:text-white font-semibold transition-colors">Cancelar</button>
+          <button type="submit" class="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-xl shadow-lg shadow-emerald-500/20 transition-all flex items-center gap-1.5">
+            <i data-lucide="check" class="w-4 h-4 stroke-[3]"></i>
+            Confirmar Saque
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: SUCESSO DE COMPRA / CHECKOUT ================= -->
+  <div id="modal-checkout-success" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4">
+    <div class="bg-surface-card border border-emerald-500/40 rounded-2xl max-w-md w-full p-6 text-center space-y-4 fade-in shadow-2xl">
+      <div class="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto ring-8 ring-emerald-500/10">
+        <i data-lucide="check-circle-2" class="w-10 h-10 stroke-[2.5]"></i>
+      </div>
+      <div>
+        <h2 class="text-xl font-extrabold text-white">Pagamento Aprovado com Sucesso!</h2>
+        <p class="text-xs text-slate-300 mt-1">Seu pedido foi processado instantaneamente pela plataforma Infofy.</p>
+      </div>
+      <div class="bg-slate-900/80 border border-surface-border rounded-xl p-3.5 text-left text-xs space-y-1.5">
+        <div class="flex justify-between"><span class="text-slate-400">Produto:</span> <span id="success-product-title" class="font-bold text-white">Fórmula do Infoproduto</span></div>
+        <div class="flex justify-between"><span class="text-slate-400">Total Pago:</span> <span id="success-total-paid" class="font-mono font-bold text-emerald-400">R$ 97,00</span></div>
+        <div class="flex justify-between"><span class="text-slate-400">Acesso enviado para:</span> <span id="success-email" class="text-slate-200 font-mono">lucas.mendes@email.com</span></div>
+      </div>
+      <p class="text-[11px] text-slate-400">Enviamos seus dados de login da área de membros para a sua caixa de entrada e WhatsApp.</p>
+      <button onclick="closeSuccessModal()" class="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-xl transition-all shadow-lg shadow-emerald-500/20">
+        Acessar Área de Membros
+      </button>
+    </div>
+  </div>
+
+  <!-- ================= TOAST NOTIFICATION CONTAINER ================= -->
+  <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none"></div>
+
+  <!-- ================= JAVASCRIPT INTEGRADO COMPLETO ================= -->
+  <script>
+    // ESTADO GLOBAL DA APLICAÇÃO
+    const AppState = {
+      currentTab: 'dashboard',
+      balance: 1250.00,
+      todaySales: 840.00,
+      monthSales: 14890.00,
+      activePeriod: 'today',
+      checkoutData: {
+        title: 'Fórmula do Infoproduto Lucrativo',
+        basePrice: 97.00,
+        bumpPrice: 27.00,
+        hasBump: false,
+        couponDiscountPercent: 0,
+        installments: 12,
+        paymentMethod: 'pix'
+      },
+      myProducts: [
+        {
+          id: 1,
+          name: 'Mentoria Escala 10k',
+          type: 'mentoria',
+          typeLabel: 'Mentoria / Comunidade',
+          price: 997.00,
+          commission: 40,
+          salesCount: 142,
+          totalRevenue: 141574.00,
+          conversionRate: '5.2%',
+          status: 'ativo',
+          badgeColor: 'bg-purple-500/10 text-purple-400 border-purple-500/20'
+        },
+        {
+          id: 2,
+          name: 'Fórmula do Infoproduto Lucrativo',
+          type: 'curso',
+          typeLabel: 'Curso Online',
+          price: 97.00,
+          commission: 50,
+          salesCount: 384,
+          totalRevenue: 37248.00,
+          conversionRate: '8.4%',
+          status: 'ativo',
+          badgeColor: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+        },
+        {
+          id: 3,
+          name: 'E-book Copywriting Milionário',
+          type: 'ebook',
+          typeLabel: 'E-book / PDF',
+          price: 67.00,
+          commission: 60,
+          salesCount: 890,
+          totalRevenue: 59630.00,
+          conversionRate: '12.1%',
+          status: 'ativo',
+          badgeColor: 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+        }
+      ],
+      marketplaceProducts: [
+        {
+          id: 101,
+          name: 'Manual do Tráfego Pago no Meta & TikTok Ads',
+          author: 'Lucas Vianna',
+          type: 'curso',
+          typeLabel: 'Curso Online',
+          temp: '150°',
+          price: 197.00,
+          commissionPercent: 60,
+          commissionValue: 118.20,
+          rating: 4.9,
+          reviews: 420,
+          icon: 'video'
+        },
+        {
+          id: 102,
+          name: 'E-book: 100 Prompts de IA para Vendas Diárias',
+          author: 'Juliana Costa',
+          type: 'ebook',
+          typeLabel: 'E-book / PDF',
+          temp: '120°',
+          price: 47.00,
+          commissionPercent: 65,
+          commissionValue: 30.55,
+          rating: 4.8,
+          reviews: 215,
+          icon: 'book-open'
+        },
+        {
+          id: 103,
+          name: 'Mentoria Individual: Funil Perpétuo 6 Dígitos',
+          author: 'Renato Galvão',
+          type: 'mentoria',
+          typeLabel: 'Mentoria',
+          temp: '95°',
+          price: 1497.00,
+          commissionPercent: 35,
+          commissionValue: 523.95,
+          rating: 5.0,
+          reviews: 88,
+          icon: 'users'
+        },
+        {
+          id: 104,
+          name: 'Curso Design para Redes Sociais no Canva',
+          author: 'Mariana Duarte',
+          type: 'curso',
+          typeLabel: 'Curso Online',
+          temp: '142°',
+          price: 77.00,
+          commissionPercent: 50,
+          commissionValue: 38.50,
+          rating: 4.9,
+          reviews: 530,
+          icon: 'sparkles'
+        },
+        {
+          id: 105,
+          name: 'Guia Definitivo do Dropshipping Nacional',
+          author: 'Felipe Alencar',
+          type: 'ebook',
+          typeLabel: 'E-book / PDF',
+          temp: '88°',
+          price: 89.00,
+          commissionPercent: 55,
+          commissionValue: 48.95,
+          rating: 4.7,
+          reviews: 160,
+          icon: 'package-check'
+        },
+        {
+          id: 106,
+          name: 'Comunidade Mastermind Produtores Digitais',
+          author: 'Alexandre Torres',
+          type: 'mentoria',
+          typeLabel: 'Comunidade / Assinatura',
+          temp: '135°',
+          price: 297.00,
+          commissionPercent: 40,
+          commissionValue: 118.80,
+          rating: 4.9,
+          reviews: 310,
+          icon: 'message-circle'
+        }
+      ]
+    };
+
+    // FORMATAÇÃO DE MOEDA BRL
+    function formatCurrency(val) {
+      return Number(val).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+
+    // ALTERNAR ABAS
+    function switchTab(tabId) {
+      AppState.currentTab = tabId;
+      
+      // Ocultar todas as seções
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      const activeSection = document.getElementById(`tab-${tabId}`);
+      if (activeSection) {
+        activeSection.classList.remove('hidden');
+      }
+
+      // Atualizar botões de navegação Desktop
+      document.querySelectorAll('.tab-nav-btn').forEach(btn => {
+        btn.classList.remove('text-emerald-400', 'bg-emerald-500/10');
+        btn.classList.add('text-slate-400');
+      });
+      const activeNavBtn = document.getElementById(`nav-btn-${tabId}`);
+      if (activeNavBtn) {
+        activeNavBtn.classList.add('text-emerald-400', 'bg-emerald-500/10');
+        activeNavBtn.classList.remove('text-slate-400');
+      }
+
+      // Atualizar botões de navegação Mobile
+      document.querySelectorAll('.mobile-nav-item').forEach(btn => {
+        btn.classList.remove('text-emerald-400');
+        btn.classList.add('text-slate-400');
+      });
+      const activeMobileBtn = document.getElementById(`mobile-nav-${tabId}`);
+      if (activeMobileBtn) {
+        activeMobileBtn.classList.add('text-emerald-400');
+        activeMobileBtn.classList.remove('text-slate-400');
+      }
+
+      // Reler ícones
+      lucide.createIcons();
+    }
+
+    // RENDERIZAR MEUS PRODUTOS
+    function renderMyProducts(list = AppState.myProducts) {
+      const container = document.getElementById('my-products-grid');
+      if (!container) return;
+
+      if (list.length === 0) {
+        container.innerHTML = `
+          <div class="col-span-full py-12 text-center text-slate-400 bg-surface-card border border-surface-border rounded-2xl p-6">
+            <i data-lucide="package-x" class="w-12 h-12 text-slate-600 mx-auto mb-3"></i>
+            <h3 class="text-base font-bold text-white">Nenhum produto encontrado</h3>
+            <p class="text-xs text-slate-500 mt-1">Tente ajustar seus termos de busca ou cadastre um novo produto.</p>
+          </div>
+        `;
+        lucide.createIcons();
+        return;
+      }
+
+      container.innerHTML = list.map(item => `
+        <div class="bg-surface-card border border-surface-border rounded-2xl p-5 flex flex-col justify-between hover:border-emerald-500/40 transition-all group">
+          <div>
+            <div class="flex items-center justify-between gap-2 mb-3">
+              <span class="text-[11px] font-semibold px-2 py-0.5 rounded border ${item.badgeColor}">${item.typeLabel}</span>
+              <div class="flex items-center gap-1.5 text-xs">
+                <span class="w-2 h-2 rounded-full ${item.status === 'ativo' ? 'bg-emerald-400' : 'bg-slate-500'}"></span>
+                <span class="text-slate-300 font-medium capitalize">${item.status}</span>
+              </div>
+            </div>
+
+            <h3 class="text-base font-bold text-white group-hover:text-emerald-400 transition-colors">${item.name}</h3>
+            <p class="text-xl font-bold font-mono text-emerald-400 mt-2">${formatCurrency(item.price)}</p>
+
+            <!-- Estatísticas do Produto -->
+            <div class="grid grid-cols-2 gap-2 mt-4 pt-4 border-t border-surface-border text-xs">
+              <div>
+                <span class="text-[10px] text-slate-500 uppercase">Vendas Totais</span>
+                <p class="font-bold text-white font-mono">${item.salesCount} un.</p>
+              </div>
+              <div>
+                <span class="text-[10px] text-slate-500 uppercase">Faturamento</span>
+                <p class="font-bold text-slate-200 font-mono">${formatCurrency(item.totalRevenue)}</p>
+              </div>
+              <div>
+                <span class="text-[10px] text-slate-500 uppercase">Conversão</span>
+                <p class="font-bold text-emerald-400 font-mono">${item.conversionRate}</p>
+              </div>
+              <div>
+                <span class="text-[10px] text-slate-500 uppercase">Comissão Afiliados</span>
+                <p class="font-bold text-purple-400 font-mono">${item.commission}%</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-5 pt-4 border-t border-surface-border flex items-center gap-2">
+            <button onclick="copyProductLink('${item.name}')" class="flex-1 py-2 px-3 bg-surface-input hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-surface-border flex items-center justify-center gap-1.5 transition-colors">
+              <i data-lucide="link" class="w-3.5 h-3.5"></i>
+              Copiar Link
+            </button>
+            <button onclick="previewInCheckout('${item.name}', ${item.price})" class="py-2 px-3 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 text-xs font-semibold rounded-xl border border-emerald-500/20 flex items-center justify-center gap-1.5 transition-colors" title="Abrir no Checkout Builder">
+              <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+              Checkout
+            </button>
+          </div>
+        </div>
+      `).join('');
+
+      lucide.createIcons();
+    }
+
+    // FILTRAR MEUS PRODUTOS
+    function filterMyProducts() {
+      const query = (document.getElementById('my-products-search')?.value || '').toLowerCase();
+      const type = document.getElementById('my-products-filter-type')?.value || 'all';
+
+      const filtered = AppState.myProducts.filter(p => {
+        const matchesQuery = p.name.toLowerCase().includes(query) || p.typeLabel.toLowerCase().includes(query);
+        const matchesType = type === 'all' || p.type === type;
+        return matchesQuery && matchesType;
+      });
+
+      renderMyProducts(filtered);
+    }
+
+    // RENDERIZAR MARKETPLACE
+    function renderMarketplace(list = AppState.marketplaceProducts) {
+      const container = document.getElementById('marketplace-grid');
+      if (!container) return;
+
+      container.innerHTML = list.map(item => `
+        <div class="bg-surface-card border border-surface-border rounded-2xl p-5 flex flex-col justify-between hover:border-emerald-500/40 transition-all group">
+          <div>
+            <div class="flex items-center justify-between gap-2 mb-3">
+              <span class="text-[11px] font-semibold text-slate-400 flex items-center gap-1">
+                <i data-lucide="flame" class="w-3.5 h-3.5 text-amber-500 fill-amber-500"></i>
+                ${item.temp} de temperatura
+              </span>
+              <span class="text-[11px] font-semibold px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-surface-border">${item.typeLabel}</span>
+            </div>
+
+            <h3 class="text-base font-bold text-white group-hover:text-emerald-400 transition-colors leading-snug">${item.name}</h3>
+            <p class="text-xs text-slate-400 mt-1 flex items-center gap-1">
+              <span>Por ${item.author}</span>
+              <span>·</span>
+              <span class="text-amber-400 flex items-center gap-0.5"><i data-lucide="star" class="w-3 h-3 fill-current"></i> ${item.rating} (${item.reviews})</span>
+            </p>
+
+            <div class="mt-4 p-3 rounded-xl bg-slate-900/60 border border-surface-border space-y-1">
+              <div class="flex justify-between text-xs">
+                <span class="text-slate-400">Preço final:</span>
+                <span class="font-bold text-white font-mono">${formatCurrency(item.price)}</span>
+              </div>
+              <div class="flex justify-between text-xs">
+                <span class="text-slate-400">Sua comissão (${item.commissionPercent}%):</span>
+                <span class="font-bold text-emerald-400 font-mono text-sm">${formatCurrency(item.commissionValue)}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-5 pt-4 border-t border-surface-border flex items-center gap-2">
+            <button onclick="copyAffiliateLink('${item.name}')" class="flex-1 py-2.5 px-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-xl transition-all shadow-md shadow-emerald-500/15 flex items-center justify-center gap-1.5 active:scale-95">
+              <i data-lucide="link-2" class="w-4 h-4 stroke-[2.5]"></i>
+              Promover Produto
+            </button>
+            <button onclick="previewInCheckout('${item.name}', ${item.price})" class="p-2.5 bg-surface-input hover:bg-slate-700 text-slate-300 rounded-xl border border-surface-border transition-colors" title="Ver Página de Checkout">
+              <i data-lucide="eye" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </div>
+      `).join('');
+
+      lucide.createIcons();
+    }
+
+    // FILTRAR MARKETPLACE POR CATEGORIA
+    function filterMarketplace(category) {
+      document.querySelectorAll('.market-filter-btn').forEach(btn => {
+        btn.classList.remove('bg-emerald-500/10', 'text-emerald-400', 'border-emerald-500/30');
+        btn.classList.add('bg-surface-card', 'text-slate-400', 'border-surface-border');
+      });
+      event.target.classList.add('bg-emerald-500/10', 'text-emerald-400', 'border-emerald-500/30');
+      event.target.classList.remove('bg-surface-card', 'text-slate-400', 'border-surface-border');
+
+      if (category === 'all') {
+        renderMarketplace(AppState.marketplaceProducts);
+      } else {
+        const filtered = AppState.marketplaceProducts.filter(p => p.type === category);
+        renderMarketplace(filtered);
+      }
+    }
+
+    // PREVIEW DE PRODUTO NO CHECKOUT BUILDER
+    function previewInCheckout(productName, price) {
+      AppState.checkoutData.title = productName;
+      AppState.checkoutData.basePrice = price;
+      
+      const titleElem = document.getElementById('checkout-product-title');
+      const basePriceElem = document.getElementById('checkout-base-price');
+      if (titleElem) titleElem.innerText = productName;
+      if (basePriceElem) basePriceElem.innerText = formatCurrency(price);
+      
+      calculateCheckoutTotal();
+      switchTab('checkout');
+      showToast(`Carregado "${productName}" no Checkout Builder!`, 'info');
+    }
+
+    // CHECKOUT: SELETOR DE MÉTODO DE PAGAMENTO
+    function selectPayMethod(method) {
+      AppState.checkoutData.paymentMethod = method;
+
+      const tabs = ['pix', 'card', 'boleto'];
+      tabs.forEach(m => {
+        const btn = document.getElementById(`pay-tab-${m}`);
+        const panel = document.getElementById(`panel-${m}`);
+        if (m === method) {
+          btn.className = 'py-2.5 px-2 rounded-lg text-xs font-bold transition-all flex flex-col sm:flex-row items-center justify-center gap-1.5 bg-emerald-500 text-slate-950 shadow-sm';
+          if (panel) panel.classList.remove('hidden');
+        } else {
+          btn.className = 'py-2.5 px-2 rounded-lg text-xs font-bold transition-all flex flex-col sm:flex-row items-center justify-center gap-1.5 text-slate-400 hover:text-white';
+          if (panel) panel.classList.add('hidden');
+        }
+      });
+
+      calculateCheckoutTotal();
+    }
+
+    // CHECKOUT: ORDER BUMP TOGGLE
+    function toggleOrderBump() {
+      const checkbox = document.getElementById('order-bump-checkbox');
+      AppState.checkoutData.hasBump = checkbox?.checked || false;
+      const bumpRow = document.getElementById('row-order-bump');
+      if (bumpRow) {
+        if (AppState.checkoutData.hasBump) {
+          bumpRow.classList.remove('hidden');
+          bumpRow.classList.add('flex');
+        } else {
+          bumpRow.classList.add('hidden');
+          bumpRow.classList.remove('flex');
+        }
+      }
+      calculateCheckoutTotal();
+    }
+
+    // CHECKOUT: APLICAR CUPOM
+    function applyDiscountCoupon() {
+      const input = document.getElementById('coupon-code-input');
+      const feedback = document.getElementById('coupon-feedback');
+      const code = (input?.value || '').trim().toUpperCase();
+
+      if (code === 'DESCONTO10' || code === 'PRIMEIRACOMPRA') {
+        AppState.checkoutData.couponDiscountPercent = 10;
+        feedback.innerText = '✓ Cupom de 10% aplicado com sucesso!';
+        feedback.className = 'text-xs font-semibold text-emerald-400 block';
+        showToast('Cupom de 10% aplicado!', 'success');
+      } else if (code === 'VIP20') {
+        AppState.checkoutData.couponDiscountPercent = 20;
+        feedback.innerText = '✓ Cupom VIP de 20% aplicado com sucesso!';
+        feedback.className = 'text-xs font-semibold text-emerald-400 block';
+        showToast('Cupom VIP de 20% aplicado!', 'success');
+      } else if (code === '') {
+        feedback.innerText = 'Por favor insira um código de cupom.';
+        feedback.className = 'text-xs font-semibold text-amber-400 block';
+      } else {
+        AppState.checkoutData.couponDiscountPercent = 0;
+        feedback.innerText = '✕ Cupom inválido ou expirado.';
+        feedback.className = 'text-xs font-semibold text-red-400 block';
+      }
+
+      calculateCheckoutTotal();
+    }
+
+    // CHECKOUT: CÁLCULO GERAL DO TOTAL
+    function calculateCheckoutTotal() {
+      let total = AppState.checkoutData.basePrice;
+      
+      if (AppState.checkoutData.hasBump) {
+        total += AppState.checkoutData.bumpPrice;
+      }
+
+      const discountRow = document.getElementById('row-discount');
+      const discountAmountElem = document.getElementById('discount-amount');
+      const discountLabel = document.getElementById('discount-label');
+
+      if (AppState.checkoutData.couponDiscountPercent > 0) {
+        const discountVal = (total * AppState.checkoutData.couponDiscountPercent) / 100;
+        total -= discountVal;
+        if (discountRow) {
+          discountRow.classList.remove('hidden');
+          discountRow.classList.add('flex');
+        }
+        if (discountAmountElem) discountAmountElem.innerText = `- ${formatCurrency(discountVal)}`;
+        if (discountLabel) discountLabel.innerText = `Desconto Cupom (${AppState.checkoutData.couponDiscountPercent}%)`;
+      } else {
+        if (discountRow) {
+          discountRow.classList.add('hidden');
+          discountRow.classList.remove('flex');
+        }
+      }
+
+      // Desconto especial de 5% no PIX
+      if (AppState.checkoutData.paymentMethod === 'pix') {
+        // Exibir nota de desconto
+      }
+
+      const totalElem = document.getElementById('checkout-final-total');
+      if (totalElem) totalElem.innerText = formatCurrency(total);
+
+      const installmentVal = (total / 12).toFixed(2);
+      const noteElem = document.getElementById('checkout-installments-note');
+      if (noteElem) {
+        if (AppState.checkoutData.paymentMethod === 'pix') {
+          noteElem.innerText = 'Pagamento à vista com aprovação instantânea';
+        } else if (AppState.checkoutData.paymentMethod === 'boleto') {
+          noteElem.innerText = 'Pagamento à vista com vencimento em 3 dias';
+        } else {
+          noteElem.innerText = `ou em até 12x de ${formatCurrency(installmentVal)}`;
+        }
+      }
+    }
+
+    // CHECKOUT: PROCESSAR PAGAMENTO
+    function processCheckoutPayment() {
+      const btn = document.getElementById('btn-submit-order');
+      const btnText = document.getElementById('btn-submit-text');
+      const originalText = btnText.innerText;
+
+      btn.disabled = true;
+      btnText.innerHTML = '<span class="inline-flex items-center gap-2"><svg class="animate-spin h-5 w-5 text-slate-950" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg> PROCESSANDO TRANSAÇÃO SEGURA...</span>';
+
+      setTimeout(() => {
+        btn.disabled = false;
+        btnText.innerText = originalText;
+
+        // Abrir modal de sucesso
+        const successModal = document.getElementById('modal-checkout-success');
+        document.getElementById('success-product-title').innerText = AppState.checkoutData.title;
+        document.getElementById('success-total-paid').innerText = document.getElementById('checkout-final-total').innerText;
+        document.getElementById('success-email').innerText = document.getElementById('checkout-email')?.value || 'seu@email.com';
+        
+        if (successModal) {
+          successModal.classList.remove('hidden');
+          successModal.classList.add('flex');
+        }
+
+        // Tocar som de confirmação e simular inserção nas transações
+        playKiwifySalesChime();
+        addNewTransactionRecord(
+          document.getElementById('checkout-name')?.value || 'Cliente do Checkout',
+          AppState.checkoutData.title,
+          AppState.checkoutData.paymentMethod.toUpperCase(),
+          document.getElementById('checkout-final-total').innerText
+        );
+      }, 1200);
+    }
+
+    function closeSuccessModal() {
+      const modal = document.getElementById('modal-checkout-success');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+    }
+
+    // COPIAR CÓDIGO PIX
+    function copyPixCode() {
+      const input = document.getElementById('pix-copy-input');
+      if (input) {
+        input.select();
+        navigator.clipboard.writeText(input.value);
+        showToast('Código PIX Copia e Cola copiado!', 'success');
+      }
+    }
+
+    // COPIAR LINK DE DIVULGAÇÃO
+    function copyProductLink(prodName) {
+      const fakeUrl = `https://infofy.pay.br/c/${Math.random().toString(36).substring(7)}`;
+      navigator.clipboard.writeText(fakeUrl).catch(() => {});
+      showToast(`Link de "${prodName}" copiado para a área de transferência!`, 'success');
+    }
+
+    // COPIAR LINK DE AFILIADO
+    function copyAffiliateLink(prodName) {
+      const fakeUrl = `https://infofy.pay.br/ref/ms99_${Math.random().toString(36).substring(7)}`;
+      navigator.clipboard.writeText(fakeUrl).catch(() => {});
+      showToast(`Link de afiliado gerado e copiado!`, 'success');
+    }
+
+    // MODAL DE NOVO PRODUTO
+    function openNewProductModal() {
+      const m = document.getElementById('modal-new-product');
+      if (m) {
+        m.classList.remove('hidden');
+        m.classList.add('flex');
+      }
+    }
+
+    function closeNewProductModal() {
+      const m = document.getElementById('modal-new-product');
+      if (m) {
+        m.classList.add('hidden');
+        m.classList.remove('flex');
+      }
+    }
+
+    function handleCreateProduct(e) {
+      e.preventDefault();
+      const name = document.getElementById('new-prod-name').value;
+      const type = document.getElementById('new-prod-type').value;
+      const price = parseFloat(document.getElementById('new-prod-price').value);
+      const commission = parseInt(document.getElementById('new-prod-commission').value) || 50;
+
+      const typeLabels = {
+        'curso': 'Curso Online',
+        'ebook': 'E-book / PDF',
+        'mentoria': 'Mentoria / Comunidade'
+      };
+
+      const newProd = {
+        id: Date.now(),
+        name: name,
+        type: type,
+        typeLabel: typeLabels[type] || 'Infoproduto',
+        price: price,
+        commission: commission,
+        salesCount: 0,
+        totalRevenue: 0.00,
+        conversionRate: '0.0%',
+        status: 'ativo',
+        badgeColor: type === 'curso' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : (type === 'ebook' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : 'bg-purple-500/10 text-purple-400 border-purple-500/20')
+      };
+
+      AppState.myProducts.unshift(newProd);
+      renderMyProducts();
+      closeNewProductModal();
+      document.getElementById('form-new-product').reset();
+      showToast(`Produto "${name}" cadastrado com sucesso!`, 'success');
+    }
+
+    // MODAL DE SAQUE PIX
+    function openWithdrawModal() {
+      document.getElementById('withdraw-available-balance').innerText = formatCurrency(AppState.balance);
+      const m = document.getElementById('modal-withdraw');
+      if (m) {
+        m.classList.remove('hidden');
+        m.classList.add('flex');
+      }
+    }
+
+    function closeWithdrawModal() {
+      const m = document.getElementById('modal-withdraw');
+      if (m) {
+        m.classList.add('hidden');
+        m.classList.remove('flex');
+      }
+    }
+
+    function setWithdrawMax() {
+      document.getElementById('withdraw-amount').value = AppState.balance;
+    }
+
+    function handleWithdrawSubmit(e) {
+      e.preventDefault();
+      const amount = parseFloat(document.getElementById('withdraw-amount').value);
+      if (amount > AppState.balance) {
+        showToast('Valor de saque maior que o saldo disponível!', 'error');
+        return;
+      }
+      if (amount < 50) {
+        showToast('Saque mínimo de R$ 50,00', 'error');
+        return;
+      }
+
+      AppState.balance -= amount;
+      document.getElementById('header-balance').innerText = formatCurrency(AppState.balance);
+      document.getElementById('stat-balance-card').innerText = formatCurrency(AppState.balance);
+      closeWithdrawModal();
+      showToast(`Solicitação de saque de ${formatCurrency(amount)} enviada via PIX! Previsão: 2 minutos.`, 'success');
+    }
+
+    // MUDAR PERÍODO DO DASHBOARD & ATUALIZAR GRÁFICO
+    function changeTimePeriod(period) {
+      AppState.activePeriod = period;
+      document.querySelectorAll('.period-btn').forEach(btn => {
+        btn.classList.remove('text-white', 'bg-slate-800');
+        btn.classList.add('text-slate-400');
+      });
+      document.getElementById(`period-${period}`).classList.add('text-white', 'bg-slate-800');
+      document.getElementById(`period-${period}`).classList.remove('text-slate-400');
+
+      const badge = document.getElementById('chart-period-badge');
+      const area = document.getElementById('chart-area-path');
+      const line = document.getElementById('chart-line-path');
+      const labels = document.getElementById('chart-labels-container');
+
+      if (period === 'today') {
+        badge.innerText = 'Hoje (Por Horas)';
+        area.setAttribute('d', 'M 0 170 L 100 150 L 200 120 L 300 80 L 400 110 L 500 60 L 600 45 L 700 25 L 700 200 L 0 200 Z');
+        line.setAttribute('d', 'M 0 170 L 100 150 L 200 120 L 300 80 L 400 110 L 500 60 L 600 45 L 700 25');
+        labels.innerHTML = '<span>06:00</span><span>09:00</span><span>12:00</span><span>15:00</span><span>18:00</span><span>21:00</span><span class="text-emerald-400 font-bold">Agora</span>';
+      } else if (period === '7d') {
+        badge.innerText = 'Últimos 7 dias';
+        area.setAttribute('d', 'M 0 160 L 100 130 L 200 145 L 300 90 L 400 110 L 500 50 L 600 70 L 700 35 L 700 200 L 0 200 Z');
+        line.setAttribute('d', 'M 0 160 L 100 130 L 200 145 L 300 90 L 400 110 L 500 50 L 600 70 L 700 35');
+        labels.innerHTML = '<span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span><span class="text-emerald-400 font-bold">Hoje</span>';
+      } else if (period === '30d') {
+        badge.innerText = 'Últimos 30 dias';
+        area.setAttribute('d', 'M 0 140 L 150 90 L 300 130 L 450 70 L 600 40 L 700 20 L 700 200 L 0 200 Z');
+        line.setAttribute('d', 'M 0 140 L 150 90 L 300 130 L 450 70 L 600 40 L 700 20');
+        labels.innerHTML = '<span>Sem 1</span><span>Sem 2</span><span>Sem 3</span><span>Sem 4</span><span class="text-emerald-400 font-bold">Atual</span>';
+      } else {
+        badge.innerText = 'Ano Atual (2026)';
+        area.setAttribute('d', 'M 0 160 L 140 130 L 280 110 L 420 80 L 560 40 L 700 15 L 700 200 L 0 200 Z');
+        line.setAttribute('d', 'M 0 160 L 140 130 L 280 110 L 420 80 L 560 40 L 700 15');
+        labels.innerHTML = '<span>Jan</span><span>Mar</span><span>Mai</span><span>Jul</span><span>Set</span><span class="text-emerald-400 font-bold">Out</span>';
+      }
+    }
+
+    // TOOLTIP DO GRÁFICO
+    function showChartTooltip(x, y, text) {
+      showToast(`📊 ${text}`, 'info');
+    }
+
+    // ADICIONAR NOVA TRANSAÇÃO NA TABELA
+    function addNewTransactionRecord(client, product, method, amount) {
+      const tbody = document.getElementById('transactions-list-body');
+      if (!tbody) return;
+
+      const initials = client.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
+      const tr = document.createElement('tr');
+      tr.className = 'hover:bg-slate-800/40 transition-colors bg-emerald-500/5 animate-pulse';
+      tr.innerHTML = `
+        <td class="py-3.5 px-4 font-medium text-slate-200 flex items-center gap-2">
+          <div class="w-7 h-7 rounded-full bg-emerald-500/20 text-emerald-400 font-bold flex items-center justify-center text-[10px]">${initials}</div>
+          <span>${client}</span>
+        </td>
+        <td class="py-3.5 px-4 text-slate-300 font-medium">${product}</td>
+        <td class="py-3.5 px-4 text-slate-400">
+          <span class="flex items-center gap-1.5 text-emerald-400 font-medium">
+            <i data-lucide="zap" class="w-3.5 h-3.5"></i> ${method}
+          </span>
+        </td>
+        <td class="py-3.5 px-4 font-mono font-bold text-emerald-400">${amount}</td>
+        <td class="py-3.5 px-4">
+          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+            Aprovado
+          </span>
+        </td>
+        <td class="py-3.5 px-4 text-emerald-400 font-semibold text-right">Agora mesmo</td>
+      `;
+
+      tbody.insertBefore(tr, tbody.firstChild);
+      setTimeout(() => tr.classList.remove('animate-pulse', 'bg-emerald-500/5'), 2000);
+      lucide.createIcons();
+
+      // Incrementar métricas fictícias
+      const rawNum = parseFloat(amount.replace(/[^\d,]/g, '').replace(',', '.'));
+      if (!isNaN(rawNum)) {
+        AppState.todaySales += rawNum;
+        AppState.monthSales += rawNum;
+        AppState.balance += rawNum;
+        document.getElementById('stat-today-value').innerText = formatCurrency(AppState.todaySales);
+        document.getElementById('stat-month-value').innerText = formatCurrency(AppState.monthSales);
+        document.getElementById('header-balance').innerText = formatCurrency(AppState.balance);
+        document.getElementById('stat-balance-card').innerText = formatCurrency(AppState.balance);
+      }
+    }
+
+    // SIMULAR VENDA INSTANTÂNEA COM SOM
+    function triggerSimulatedSale() {
+      const names = ['Guilherme Sampaio', 'Priscila Rocha', 'Thiago Meireles', 'Beatriz Nogueira', 'Eduardo Lima'];
+      const products = ['Fórmula do Infoproduto', 'Mentoria Escala 10k', 'E-book Copywriting', 'Pack Templates Pro'];
+      const prices = ['R$ 97,00', 'R$ 197,00', 'R$ 67,00', 'R$ 297,00'];
+      
+      const randomName = names[Math.floor(Math.random() * names.length)];
+      const randomProd = products[Math.floor(Math.random() * products.length)];
+      const randomPrice = prices[Math.floor(Math.random() * prices.length)];
+
+      playKiwifySalesChime();
+      addNewTransactionRecord(randomName, randomProd, 'PIX Instantâneo', randomPrice);
+      showToast(`🎉 Nova venda aprovada! ${randomPrice} de ${randomName}`, 'success');
+    }
+
+    // SINTETIZADOR DO SOM DE VENDA "PLIM PLIM" (Web Audio API sem dependências externas)
+    function playKiwifySalesChime() {
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const now = audioCtx.currentTime;
+
+        // Primeiro tom (Dó agudo)
+        const osc1 = audioCtx.createOscillator();
+        const gain1 = audioCtx.createGain();
+        osc1.type = 'triangle';
+        osc1.frequency.setValueAtTime(1046.50, now); // C6
+        gain1.gain.setValueAtTime(0.3, now);
+        gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+        osc1.connect(gain1);
+        gain1.connect(audioCtx.destination);
+        osc1.start(now);
+        osc1.stop(now + 0.4);
+
+        // Segundo tom ascendente triunfante (Mi agudo)
+        const osc2 = audioCtx.createOscillator();
+        const gain2 = audioCtx.createGain();
+        osc2.type = 'triangle';
+        osc2.frequency.setValueAtTime(1318.51, now + 0.12); // E6
+        gain2.gain.setValueAtTime(0.35, now + 0.12);
+        gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+        osc2.connect(gain2);
+        gain2.connect(audioCtx.destination);
+        osc2.start(now + 0.12);
+        osc2.stop(now + 0.65);
+      } catch (err) {
+        // Fallback silencioso se o navegador bloquear autoplay
+      }
+    }
+
+    // SISTEMA DE NOTIFICAÇÕES TOAST
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toast-container');
+      if (!container) return;
+
+      const toast = document.createElement('div');
+      const colors = {
+        success: 'bg-emerald-950/90 border-emerald-500/40 text-emerald-200',
+        error: 'bg-red-950/90 border-red-500/40 text-red-200',
+        info: 'bg-slate-900/90 border-surface-border text-slate-200'
+      };
+
+      toast.className = `p-3.5 rounded-xl border ${colors[type] || colors.info} backdrop-blur-md shadow-2xl flex items-center gap-3 text-xs font-semibold fade-in pointer-events-auto`;
+      toast.innerHTML = `
+        <i data-lucide="${type === 'success' ? 'check-circle' : (type === 'error' ? 'alert-triangle' : 'info')}" class="w-4 h-4 shrink-0 text-emerald-400"></i>
+        <span class="flex-1">${message}</span>
+      `;
+
+      container.appendChild(toast);
+      lucide.createIcons();
+
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(-8px)';
+        toast.style.transition = 'all 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+
+    // CONTADOR REGRESSIVO DO CHECKOUT (14m 59s)
+    function startCheckoutTimer() {
+      let secondsRemaining = 14 * 60 + 59;
+      const timerElem = document.getElementById('checkout-timer');
+      if (!timerElem) return;
+
+      setInterval(() => {
+        if (secondsRemaining <= 0) {
+          secondsRemaining = 15 * 60;
+        }
+        secondsRemaining--;
+        const mins = Math.floor(secondsRemaining / 60);
+        const secs = secondsRemaining % 60;
+        timerElem.innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+      }, 1000);
+    }
+
+    // MODAL DE CONFIGURAÇÃO RÁPIDA DO CHECKOUT
+    function openConfigCheckoutModal() {
+      const newPrice = prompt('Defina o valor base do infoproduto no checkout (R$):', AppState.checkoutData.basePrice.toString());
+      if (newPrice && !isNaN(parseFloat(newPrice))) {
+        AppState.checkoutData.basePrice = parseFloat(newPrice);
+        document.getElementById('checkout-base-price').innerText = formatCurrency(AppState.checkoutData.basePrice);
+        calculateCheckoutTotal();
+        showToast(`Preço do checkout atualizado para ${formatCurrency(AppState.checkoutData.basePrice)}!`, 'success');
+      }
+    }
+
+    // INICIALIZAÇÃO DA APLICAÇÃO
+    window.addEventListener('DOMContentLoaded', () => {
+      renderMyProducts();
+      renderMarketplace();
+      calculateCheckoutTotal();
+      startCheckoutTimer();
+      lucide.createIcons();
+    });
+  </script>
+</body>
+</html>

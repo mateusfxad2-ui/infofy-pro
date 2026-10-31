@@ -1,0 +1,6 @@
+{
+  "name": "Infofy - Plataforma de Infoprodutos e Checkout",
+  "description": "Protótipo completo de plataforma de vendas e hospedagem de infoprodutos com dashboard, marketplace, gestão de produtos e checkout de alta conversão.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
